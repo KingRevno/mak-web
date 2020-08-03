@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   BrowserRouter as Router,
   Switch,
@@ -10,6 +10,7 @@ import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 
 
+
 import './App.css';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -17,31 +18,33 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 
 
-class App extends React.Component{
-
-  /*trying to pass info from parent to chill using props of info*/
-  constructor(props) {
-    super(props);
-    this.state = {
-      title: 'Tony Mak',
+const App =() => {
+  
+  const [navTitle, setNavTitle] = useState({
+    navTitle: 'Tony Mak',
       headerLinks: [
-        { title: 'Home', path: '/' },
-        { title: 'About', path: '/about' },
-        { title: 'Contact', path: '/contact' }
-      ],
-      home: {
-        title: 'Hi, my name is',
-        subTitle: 'Tony Mak',
-        text: 'a college senior at University of Central Florida.'
-      },
-      about: {
-        title: 'About Me'
-      },
-      contact: {
-        title: 'Let\'s Talk'
-      }
+        { navTitle: 'Home', path: '/' },
+        { navTitle: 'About', path: '/about' },
+        { navTitle: 'Contact', path: '/contact' }
+      ]
+  });
+  const [home, setHome] = useState({
+    home: {
+      title: 'Hi, my name is',
+      subTitle: 'Tony Mak',
+      text: 'a college senior at University of Central Florida.'
     }
-  }
+  })
+  const [about, setAbout] =useState({
+    about:{
+      title: 'About Me'
+    }
+  })
+  const [contact, setContact] =useState({
+    contact:{
+      title: 'Let\'s Talk'
+    }
+  })
 
 
   render() {

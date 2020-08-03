@@ -3,7 +3,7 @@ import Container from 'react-bootstrap/esm/Container';
 import Row from 'react-bootstrap/Row';
 import Col from'react-bootstrap/Col';
 
-function Footer() {
+const Footer =() => {
 
     return (
     <footer className="mt-5">

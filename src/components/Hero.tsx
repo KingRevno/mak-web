@@ -6,7 +6,7 @@ import Container from 'react-bootstrap/esm/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 
-function Hero(props){
+const Hero =() =>{
 
     return(
     <Jumbotron fluid className="bg-transparent" >

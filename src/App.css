@@ -28,6 +28,13 @@
   color: #61dafb;
 }
 
+.center-150 {
+  display: grid;
+  grid-template-columns: minmax(300px, 25%) 1fr;
+  padding: 12px;
+}
+
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);

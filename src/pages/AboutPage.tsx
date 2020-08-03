@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 
-function AboutPage(props){
+const AboutPage = () => {
 
-    return(
+    const [about, setAbout] = useState({
+        title: 'About Me'
+    })
+
+    return (
 
         <div className="center">
             <p>Hello, my name is Tony Mak. I'm a upcoming senior graduate at University of Central Florida for Computer Engineering. I have classroom experience in Java, C, C#, and python,
@@ -12,7 +16,7 @@ function AboutPage(props){
             <p>My dream is to one day start my own business and become an entrepreneur, it excites me to think about the future!</p>
             <p>This is center within a hero component and a contect component for design </p>
         </div>
-        
+
     )
 
 }

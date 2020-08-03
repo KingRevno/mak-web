@@ -34,6 +34,17 @@
   padding: 12px;
 }
 
+.footer{
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+
+.footer-container{
+  padding-bottom: 60px;
+}
+
 
 @keyframes App-logo-spin {
   from {

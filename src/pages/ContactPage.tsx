@@ -1,13 +1,16 @@
-import React from 'react';
-import Bootstrap from 'react-bootstrap'
-import Toast from 'react-bootstrap/Toast'
+import React, { useState } from 'react';
 
-const ContactPage =() =>{
+
+const ContactPage = () => {
+
+    const [contact, setContact] = useState({
+        contact: {
+            title: 'Let\'s Talk'
+        }
+    })
 
     return (
-        <div>
-
-        </div>
+        <div>"hello"</div>
 
     )
 

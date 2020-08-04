@@ -21,10 +21,10 @@ const Hero = () => {
             <Container fluid={true}>
                 <Row className="justify-content-center py=5">
                     <Col md={8}>
-                        {home && <div className="lead font-weight-light text-muted ">{home.title}</div>}
-                        {home && <div className="display-1">{home.subTitle}</div>}
+                        {home && <div className="lead font-weight-light text-muted fade-in ">{home.title}</div>}
+                        {home && <div className="display-1 fade-in">{home.subTitle}</div>}
                         <Row>
-                            <Col className="center-150">{home && <div className="text-dark">{home.text}</div>}</Col>
+                            <Col className="center-150">{home && <div className="text-dark fade-in delayed">{home.text}</div>}</Col>
                         </Row>
                     </Col>
                 </Row>

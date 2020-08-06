@@ -11,7 +11,7 @@ import Me from '../me.jpg';
 
 const Hero = () => {
 
-    const [home, setHome] = useState({
+    const [home] = useState({
         title: 'Hey, I\'m',
         subTitle: 'Tony Mak',
         text: 'aspiring Front-End Engineer based in Austin, Tx'
@@ -22,7 +22,7 @@ const Hero = () => {
             <Container fluid={true}>
                 <Row className="justify-content-center py=5">
                     <Col md={8} >
-                        <img className="img fade-in" src={Me} />
+                        <img className="img fade-in" alt="me" src={Me} />
                         {home && <div className="lead font-weight-light text-muted fade-in ">{home.title}</div>}
                         {home && <div className="display-1 fade-in">{home.subTitle}</div>}
                         <Row>

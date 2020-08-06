@@ -3,17 +3,13 @@
     "extends": [
         "tslint-react"
     ],
-    "jsRules": {
-    },
-    "rules": {
-        
-    },
-    "rulesDirectory": [
-    ],
+    "jsRules": {},
+    "rules": {},
+    "rulesDirectory": [],
     "linterOptions": {
         "exclude": [
             "config/**/*.js",
             "node_modules/**/*.ts"
-       ]
-   }
+        ]
+    }
 }

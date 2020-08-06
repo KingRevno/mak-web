@@ -35,7 +35,7 @@
 }
 
 .footer{
-  position: absolute;
+  position: static;
   left: 0;
   bottom: 0;
   right: 0;
@@ -68,6 +68,9 @@
 .fade-in.delayed {
   animation-delay: 1s;
 }
+.fade-in.delayed.long {
+  animation-delay: 1.5s;
+}
 
 .background-color-div {
   background-color: #f1f1f1;
@@ -89,17 +92,23 @@
 }
 
 .fill-window {
-  height: 100%;
-  position: absolute;
-  left: 0;
-  width: 100%;
-  overflow: hidden;
+  height: 100vh;
+  overflow: auto;
 }
 
+.h3{
+  padding-left: 15px;
+}
 
- 
- 
+.h3nopad{
+  padding-left: none;
+  padding-top: 20px;
+}
 
+.h7{
+  justify-content: center;
+  padding-left: 15px;
+}
 
 @keyframes App-logo-spin {
   from {

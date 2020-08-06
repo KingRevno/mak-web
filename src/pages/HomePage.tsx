@@ -22,9 +22,9 @@ const HomePage = () => {
                     <AboutPage />
                 </Col>
             </Row>
-            <Row>
-                <Footer />
-            </Row>
+
+            <Footer />
+
         </Container>
     )
 

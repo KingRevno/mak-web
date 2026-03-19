@@ -5,7 +5,6 @@ import {
   ABOUT_PARAGRAPHS,
   CONTACT_LINKS,
   EXPERIENCE_HIGHLIGHTS,
-  FEATURED_PROJECTS,
   FOOTER_TAGLINE,
   HERO_COPY,
   SKILL_GROUPS,
@@ -48,10 +47,10 @@ export default function Home() {
 
                 <div className="mt-10 flex flex-wrap gap-3">
                   <a
-                    href="#projects"
+                    href="#experience"
                     className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition duration-150 hover:-translate-y-0.5 hover:bg-blue-700"
                   >
-                    View Projects
+                    View Experience
                   </a>
                   <a
                     href="#resume"
@@ -131,53 +130,6 @@ export default function Home() {
                 <h3 className="text-xl font-bold text-slate-900">{item.title}</h3>
                 <p className="mt-3 text-sm font-medium text-slate-500">{item.impact}</p>
                 <p className="mt-3 text-sm leading-7 text-slate-600">{item.detail}</p>
-              </article>
-            ))}
-          </div>
-        </SectionShell>
-
-        <SectionShell
-          id="projects"
-          eyebrow="Projects"
-          title="Featured quality engineering projects."
-          description="Focused initiatives that improved stability, confidence, and delivery speed."
-        >
-          <div className="grid gap-5 md:grid-cols-2">
-            {FEATURED_PROJECTS.map((project) => (
-              <article
-                key={project.title}
-                className="overflow-hidden rounded-xl bg-white shadow-[0_1px_4px_rgba(0,0,0,0.08)] transition duration-150 hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(37,99,235,0.14)]"
-              >
-                <div className="h-1 w-full bg-blue-600" />
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-slate-900">{project.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">{project.summary}</p>
-                  <p className="mt-4 text-sm font-medium text-slate-500">{project.outcome}</p>
-                </div>
-                <div className="px-6 pb-6">
-                  <div className="flex flex-wrap gap-2">
-                    {project.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-full border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-1 text-xs font-medium text-[#1D4ED8]"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                  {project.detailsUrl ? (
-                    <a
-                      href={project.detailsUrl}
-                      className="mt-5 inline-flex rounded-lg border border-blue-600 px-4 py-2 text-xs font-semibold text-blue-600 transition duration-150 hover:bg-blue-50"
-                    >
-                      View Details
-                    </a>
-                  ) : (
-                    <span className="mt-5 inline-flex cursor-default rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-400">
-                      Coming Soon
-                    </span>
-                  )}
-                </div>
               </article>
             ))}
           </div>

@@ -153,7 +153,7 @@ export const FEATURED_PROJECTS: Project[] = [
 ];
 
 export const CONTACT_LINKS = {
-  email: "marcellomak@gmail.com",
+  email: "qa@mak.codes",
   linkedin: "https://www.linkedin.com/in/maktony/",
   github: "https://github.com/KingRevno",
 };

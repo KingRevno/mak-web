@@ -7,7 +7,7 @@ type TypedLogoProps = {
   startDelayMs?: number;
 };
 
-const FRAMES = ["<", "<M", "<Ma", "<Mak", "<Mak ", "<Mak /", "<Mak />"];
+const FRAMES = [" ", "<", "<M", "<Ma", "<Mak", "<Mak ", "<Mak /", "<Mak />"];
 
 export function TypedLogo({ className = "", startDelayMs = 200 }: TypedLogoProps) {
   const [frameIndex, setFrameIndex] = useState(0);
@@ -50,8 +50,8 @@ export function TypedLogo({ className = "", startDelayMs = 200 }: TypedLogoProps
 
   return (
     <span className={`inline-flex items-center font-mono tracking-tight ${className}`}>
-      <span className="text-sky-200/95">{FRAMES[frameIndex]}</span>
-      {showCursor ? <span className="cursor-blink ml-0.5 text-sky-100">|</span> : null}
+      <span className="text-blue-600">{FRAMES[frameIndex]}</span>
+      {showCursor ? <span className="cursor-blink ml-0.5 text-slate-700">|</span> : null}
     </span>
   );
 }

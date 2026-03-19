@@ -20,19 +20,19 @@ export function SectionShell({
     <section id={id} className="scroll-mt-28 border-t section-divider">
       <div className="mx-auto max-w-6xl px-6 py-20 md:px-10 md:py-24">
         <SectionReveal>
-          <p className="text-xs font-medium uppercase tracking-[0.24em] text-sky-200/70">
+          <p className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">
             {eyebrow}
           </p>
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-            {title}
-          </h2>
+          <div className="mt-4 border-l-4 border-blue-600 pl-4">
+            <h2 className="text-[2rem] font-semibold tracking-tight text-slate-900">{title}</h2>
+          </div>
           {description ? (
-            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-300/90 md:text-lg">
+            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 md:text-lg">
               {description}
             </p>
           ) : null}
         </SectionReveal>
-        <SectionReveal className="mt-10" delay={0.05}>
+        <SectionReveal className="mt-10">
           {children}
         </SectionReveal>
       </div>

@@ -154,9 +154,9 @@ export const FEATURED_PROJECTS: Project[] = [
 ];
 
 export const CONTACT_LINKS = {
-  email: "anthony.mak@example.com",
-  linkedin: "https://www.linkedin.com/in/anthony-mak",
-  github: "https://github.com/anthonymak",
+  email: "marcellomak@gmail.com",
+  linkedin: "https://www.linkedin.com/in/maktony/",
+  github: "https://github.com/KingRevno",
 };
 
 export const FOOTER_TAGLINE =

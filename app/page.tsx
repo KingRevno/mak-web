@@ -1,7 +1,6 @@
 import { SectionShell } from "@/components/section-shell";
 import { SectionReveal } from "@/components/section-reveal";
 import { SiteHeader } from "@/components/site-header";
-import { Logo } from "@/components/logo";
 import {
   ABOUT_PARAGRAPHS,
   CONTACT_LINKS,
@@ -24,12 +23,7 @@ export default function Home() {
 
           <div className="mx-auto max-w-6xl">
             <SectionReveal>
-              <div className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-300">
-                <Logo className="mr-2 text-base" />
-                <span>Quality-first engineering</span>
-              </div>
-
-              <h1 className="mt-8 max-w-4xl text-4xl font-semibold tracking-tight text-white md:text-6xl">
+              <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-white md:text-6xl">
                 {HERO_COPY.name}
               </h1>
               <p className="mt-4 text-lg font-medium tracking-wide text-sky-100/85 md:text-2xl">

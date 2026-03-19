@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+:root {
+  --background: #05070f;
+  --foreground: #eef2ff;
+  --muted: #94a3b8;
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface-border: rgba(255, 255, 255, 0.12);
+  --accent: #7dd3fc;
+  --accent-strong: #60a5fa;
+  --card-shadow: 0 24px 48px rgba(2, 8, 23, 0.32);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 15% 15%, rgba(96, 165, 250, 0.18), transparent 35%),
+    radial-gradient(circle at 85% 10%, rgba(125, 211, 252, 0.16), transparent 30%),
+    linear-gradient(160deg, #04050b 0%, #070a15 40%, #03040a 100%);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(96, 165, 250, 0.25);
+  color: #f8fafc;
+}
+
+.glass-panel {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  backdrop-filter: blur(14px);
+  box-shadow: var(--card-shadow);
+}
+
+.section-divider {
+  border-color: rgba(148, 163, 184, 0.18);
+}
+
+.gradient-text {
+  background: linear-gradient(120deg, #f8fafc 10%, #bfdbfe 55%, #7dd3fc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.cursor-blink {
+  animation: cursor-blink 0.9s steps(1, end) infinite;
+}
+
+@keyframes cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}

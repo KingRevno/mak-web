@@ -1,7 +1,7 @@
 import { SectionShell } from "@/components/section-shell";
 import { SectionReveal } from "@/components/section-reveal";
 import { SiteHeader } from "@/components/site-header";
-import { TypedLogo } from "@/components/typed-logo";
+import { Logo } from "@/components/logo";
 import {
   ABOUT_PARAGRAPHS,
   CONTACT_LINKS,
@@ -25,7 +25,7 @@ export default function Home() {
           <div className="mx-auto max-w-6xl">
             <SectionReveal>
               <div className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-300">
-                <TypedLogo className="mr-2 text-base" />
+                <Logo className="mr-2 text-base" />
                 <span>Quality-first engineering</span>
               </div>
 
@@ -166,7 +166,7 @@ export default function Home() {
         >
           <div className="rounded-2xl glass-panel p-8 md:flex md:items-center md:justify-between">
             <div>
-              <h3 className="text-xl font-semibold text-white">Anthony Mak Resume</h3>
+              <h3 className="text-xl font-semibold text-white">Tony Mak Resume</h3>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">
                 Looking for deeper details on framework design, strategy ownership, and
                 delivery outcomes? Download the latest resume PDF.
@@ -221,7 +221,7 @@ export default function Home() {
       <footer className="border-t section-divider">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-10 text-sm text-slate-300 md:flex-row md:items-center md:justify-between md:px-10">
           <div>
-            <p className="font-semibold text-white">Anthony Mak</p>
+            <p className="font-semibold text-white">Tony Mak</p>
             <p className="mt-1 text-slate-400">{FOOTER_TAGLINE}</p>
           </div>
           <div className="flex items-center gap-4">

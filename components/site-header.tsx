@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Logo } from "@/components/logo";
+import { TypedLogo } from "@/components/typed-logo";
+import { TypedText } from "@/components/typed-text";
 import { NAV_ITEMS } from "@/lib/portfolio-data";
 
 export function SiteHeader() {
@@ -54,8 +55,18 @@ export function SiteHeader() {
         }`}
       >
         <div className="flex items-center justify-between px-4 py-3 md:px-6">
-          <a href="#top" className="focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70 rounded">
-            <Logo />
+          <a
+            href="#top"
+            className="inline-flex items-center gap-2 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70"
+          >
+            <TypedLogo className="text-lg" />
+            <span className="hidden text-slate-400 md:inline">/</span>
+            <TypedText
+              text="Quality-first engineering"
+              startDelayMs={1200}
+              stepMs={65}
+              className="hidden text-sm text-slate-300 md:inline-flex"
+            />
           </a>
 
           <nav className="hidden items-center gap-2 md:flex" aria-label="Primary navigation">

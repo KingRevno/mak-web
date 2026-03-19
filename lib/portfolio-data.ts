@@ -33,7 +33,7 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 export const HERO_COPY = {
-  name: "Anthony Mak",
+  name: "Tony Mak",
   role: "Senior SDET | QA Automation Engineer",
   statement:
     "I build scalable test automation, improve release confidence, and help teams ship with quality.",

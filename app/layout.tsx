@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Anthony Mak | Senior SDET Portfolio",
+  title: "Tony Mak | Senior SDET Portfolio",
   description:
-    "Premium personal portfolio for Anthony Mak, Senior SDET and QA Automation Engineer.",
+    "Premium personal portfolio for Tony Mak, Senior SDET and QA Automation Engineer.",
 };
 
 export default function RootLayout({

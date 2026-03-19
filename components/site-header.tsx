@@ -57,15 +57,15 @@ export function SiteHeader() {
         <div className="flex items-center justify-between px-4 py-3 md:px-6">
           <a
             href="#top"
-            className="inline-flex items-center gap-2 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70"
+            className="inline-flex min-w-0 items-center gap-1.5 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70 md:gap-2"
           >
-            <TypedLogo className="text-lg" />
-            <span className="hidden text-slate-400 md:inline">/</span>
+            <TypedLogo className="text-base md:text-lg" />
+            <span className="text-slate-400">/</span>
             <TypedText
               text="Quality-first engineering"
               startDelayMs={1200}
               stepMs={65}
-              className="hidden text-sm text-slate-300 md:inline-flex"
+              className="max-w-[9.5rem] truncate text-xs text-slate-300 sm:max-w-[13rem] sm:text-sm md:max-w-none md:inline-flex"
             />
           </a>
 

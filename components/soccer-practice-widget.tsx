@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type BlockType = "activity" | "water";
 
@@ -134,12 +134,17 @@ const TOTAL_SESSION_MINUTES = SESSION_BLOCKS.reduce(
   (total, block) => total + block.durationMinutes,
   0,
 );
+const STORAGE_KEY = "soccer-practice-widget-state-v1";
 
 function formatClock(seconds: number) {
   const safeSeconds = Math.max(0, seconds);
   const mins = Math.floor(safeSeconds / 60);
   const secs = safeSeconds % 60;
   return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+}
+
+function nowMs() {
+  return new Date().valueOf();
 }
 
 function toTimerState() {
@@ -192,16 +197,126 @@ export function SoccerPracticeWidget() {
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
   const [timers, setTimers] = useState<Record<string, number>>(toTimerState);
   const [activeTimerBlockId, setActiveTimerBlockId] = useState<string | null>(null);
+  const [activeTimerEndAtMs, setActiveTimerEndAtMs] = useState<number | null>(null);
+  const [keepScreenAwake, setKeepScreenAwake] = useState(false);
   const timerRef = useRef<number | null>(null);
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
 
   const completedCount = useMemo(
     () => Object.values(completed).filter(Boolean).length,
     [completed],
   );
   const progressPercent = (completedCount / SESSION_BLOCKS.length) * 100;
+  const wakeLockSupported = typeof navigator !== "undefined" && "wakeLock" in navigator;
+
+  const requestWakeLock = useCallback(async () => {
+    if (!wakeLockSupported || wakeLockRef.current) return;
+    try {
+      wakeLockRef.current = await navigator.wakeLock.request("screen");
+    } catch {
+      setKeepScreenAwake(false);
+    }
+  }, [wakeLockSupported]);
+
+  const releaseWakeLock = useCallback(async () => {
+    if (!wakeLockRef.current) return;
+    try {
+      await wakeLockRef.current.release();
+    } catch {
+      // Ignore wake lock release errors.
+    } finally {
+      wakeLockRef.current = null;
+    }
+  }, []);
+
+  const reconcileActiveTimer = useCallback(
+    (shouldPlaySound: boolean) => {
+      if (!activeTimerBlockId || !activeTimerEndAtMs) return;
+      const remaining = Math.max(0, Math.ceil((activeTimerEndAtMs - nowMs()) / 1000));
+
+      if (remaining <= 0) {
+        setTimers((current) => ({ ...current, [activeTimerBlockId]: 0 }));
+        setCompleted((existing) => ({ ...existing, [activeTimerBlockId]: true }));
+        setActiveTimerBlockId(null);
+        setActiveTimerEndAtMs(null);
+        if (shouldPlaySound) playWhistleTone();
+        return;
+      }
+
+      setTimers((current) => {
+        if (current[activeTimerBlockId] === remaining) return current;
+        return { ...current, [activeTimerBlockId]: remaining };
+      });
+    },
+    [activeTimerBlockId, activeTimerEndAtMs],
+  );
 
   useEffect(() => {
-    if (!activeTimerBlockId) {
+    if (typeof window === "undefined") return;
+    try {
+      const savedRaw = window.localStorage.getItem(STORAGE_KEY);
+      if (!savedRaw) return;
+
+      const saved = JSON.parse(savedRaw) as {
+        openBlockId?: unknown;
+        completed?: unknown;
+        timers?: unknown;
+        activeTimerBlockId?: unknown;
+        activeTimerEndAtMs?: unknown;
+      };
+
+      const nextTimers = toTimerState();
+      if (saved.timers && typeof saved.timers === "object") {
+        for (const block of SESSION_BLOCKS) {
+          const value = (saved.timers as Record<string, unknown>)[block.id];
+          if (typeof value === "number" && Number.isFinite(value)) {
+            nextTimers[block.id] = Math.max(0, Math.round(value));
+          }
+        }
+      }
+      const nextCompleted: Record<string, boolean> = {};
+      if (saved.completed && typeof saved.completed === "object") {
+        for (const block of SESSION_BLOCKS) {
+          nextCompleted[block.id] = Boolean((saved.completed as Record<string, unknown>)[block.id]);
+        }
+      }
+
+      window.setTimeout(() => {
+        setTimers(nextTimers);
+        setCompleted(nextCompleted);
+
+        if (typeof saved.openBlockId === "string") {
+          setOpenBlockId(saved.openBlockId);
+        }
+        if (typeof saved.activeTimerBlockId === "string") {
+          setActiveTimerBlockId(saved.activeTimerBlockId);
+        }
+        if (
+          typeof saved.activeTimerEndAtMs === "number" &&
+          Number.isFinite(saved.activeTimerEndAtMs)
+        ) {
+          setActiveTimerEndAtMs(saved.activeTimerEndAtMs);
+        }
+      }, 0);
+    } catch {
+      // Ignore invalid saved state and start fresh.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const payload = {
+      openBlockId,
+      completed,
+      timers,
+      activeTimerBlockId,
+      activeTimerEndAtMs,
+    };
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  }, [openBlockId, completed, timers, activeTimerBlockId, activeTimerEndAtMs]);
+
+  useEffect(() => {
+    if (!activeTimerBlockId || !activeTimerEndAtMs) {
       if (timerRef.current) {
         window.clearInterval(timerRef.current);
         timerRef.current = null;
@@ -210,20 +325,8 @@ export function SoccerPracticeWidget() {
     }
 
     timerRef.current = window.setInterval(() => {
-      setTimers((current) => {
-        const remaining = current[activeTimerBlockId];
-        if (remaining <= 1) {
-          window.clearInterval(timerRef.current ?? undefined);
-          timerRef.current = null;
-          setActiveTimerBlockId(null);
-          setCompleted((existing) => ({ ...existing, [activeTimerBlockId]: true }));
-          playWhistleTone();
-          return { ...current, [activeTimerBlockId]: 0 };
-        }
-
-        return { ...current, [activeTimerBlockId]: remaining - 1 };
-      });
-    }, 1000);
+      reconcileActiveTimer(true);
+    }, 300);
 
     return () => {
       if (timerRef.current) {
@@ -231,7 +334,45 @@ export function SoccerPracticeWidget() {
         timerRef.current = null;
       }
     };
-  }, [activeTimerBlockId]);
+  }, [activeTimerBlockId, activeTimerEndAtMs, keepScreenAwake, reconcileActiveTimer, requestWakeLock]);
+
+  useEffect(() => {
+    function onVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        reconcileActiveTimer(true);
+        if (keepScreenAwake && activeTimerBlockId) {
+          void requestWakeLock();
+        }
+      }
+    }
+
+    function onFocus() {
+      reconcileActiveTimer(true);
+    }
+
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("pageshow", onFocus);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("pageshow", onFocus);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [activeTimerBlockId, keepScreenAwake, reconcileActiveTimer, requestWakeLock]);
+
+  useEffect(() => {
+    if (keepScreenAwake && activeTimerBlockId) {
+      void requestWakeLock();
+      return;
+    }
+    void releaseWakeLock();
+  }, [keepScreenAwake, activeTimerBlockId, requestWakeLock, releaseWakeLock]);
+
+  useEffect(() => {
+    return () => {
+      void releaseWakeLock();
+    };
+  }, [releaseWakeLock]);
 
   function toggleComplete(id: string) {
     setCompleted((current) => ({ ...current, [id]: !current[id] }));
@@ -239,19 +380,48 @@ export function SoccerPracticeWidget() {
 
   function resetBlockTimer(id: string, durationMinutes: number) {
     setTimers((current) => ({ ...current, [id]: durationMinutes * 60 }));
-    if (activeTimerBlockId === id) setActiveTimerBlockId(null);
+    if (activeTimerBlockId === id) {
+      setActiveTimerBlockId(null);
+      setActiveTimerEndAtMs(null);
+    }
   }
 
   function startOrPauseTimer(id: string) {
     setOpenBlockId(id);
-    setActiveTimerBlockId((current) => (current === id ? null : id));
+
+    if (activeTimerBlockId === id) {
+      if (activeTimerEndAtMs) {
+        const remaining = Math.max(0, Math.ceil((activeTimerEndAtMs - nowMs()) / 1000));
+        setTimers((current) => ({ ...current, [id]: remaining }));
+      }
+      setActiveTimerBlockId(null);
+      setActiveTimerEndAtMs(null);
+      return;
+    }
+
+    if (activeTimerBlockId && activeTimerEndAtMs) {
+      const previousRemaining = Math.max(0, Math.ceil((activeTimerEndAtMs - nowMs()) / 1000));
+      setTimers((current) => ({ ...current, [activeTimerBlockId]: previousRemaining }));
+    }
+
+    const fallbackSeconds =
+      SESSION_BLOCKS.find((block) => block.id === id)?.durationMinutes ?? 0;
+    const startSeconds = timers[id] > 0 ? timers[id] : fallbackSeconds * 60;
+
+    setTimers((current) => ({ ...current, [id]: startSeconds }));
+    setActiveTimerBlockId(id);
+    setActiveTimerEndAtMs(nowMs() + startSeconds * 1000);
   }
 
   function resetAll() {
     setCompleted({});
     setTimers(toTimerState());
     setActiveTimerBlockId(null);
+    setActiveTimerEndAtMs(null);
     setOpenBlockId(SESSION_BLOCKS[0].id);
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
   }
 
   return (
@@ -294,13 +464,26 @@ export function SoccerPracticeWidget() {
       </div>
 
       <div className="sticky top-2 z-20 mt-3 rounded-xl border border-slate-700 bg-slate-900/90 p-2 shadow-md backdrop-blur">
-        <button
-          type="button"
-          onClick={resetAll}
-          className="min-h-11 w-full rounded-lg border border-slate-600 bg-slate-800 px-3 text-sm font-semibold text-slate-100 hover:bg-slate-700"
-        >
-          Reset Session
-        </button>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={resetAll}
+            className="min-h-11 rounded-lg border border-slate-600 bg-slate-800 px-3 text-sm font-semibold text-slate-100 hover:bg-slate-700"
+          >
+            Reset Session
+          </button>
+          <button
+            type="button"
+            onClick={() => setKeepScreenAwake((current) => !current)}
+            disabled={!wakeLockSupported}
+            className="min-h-11 rounded-lg border border-slate-600 bg-slate-800 px-3 text-sm font-semibold text-slate-100 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {keepScreenAwake ? "Keep Screen Awake: On" : "Keep Screen Awake: Off"}
+          </button>
+        </div>
+        <p className="mt-2 text-[11px] text-slate-400">
+          Best reliability: keep screen awake while timer runs. Most phones pause web timers when locked.
+        </p>
       </div>
 
       <div className="mt-3 space-y-3">

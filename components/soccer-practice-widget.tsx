@@ -194,6 +194,7 @@ export function SoccerPracticeWidget() {
   const [activeTimerEndAtMs, setActiveTimerEndAtMs] = useState<number | null>(null);
   const [keepScreenAwake, setKeepScreenAwake] = useState(false);
   const [soundReady, setSoundReady] = useState(false);
+  const [supportMessage, setSupportMessage] = useState("");
   const timerRef = useRef<number | null>(null);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -204,7 +205,10 @@ export function SoccerPracticeWidget() {
   );
   const progressPercent = (completedCount / SESSION_BLOCKS.length) * 100;
   const wakeLockSupported = typeof navigator !== "undefined" && "wakeLock" in navigator;
-  const soundSupported = typeof window !== "undefined" && "AudioContext" in window;
+  const soundSupported =
+    typeof window !== "undefined" &&
+    ("AudioContext" in window ||
+      "webkitAudioContext" in (window as Window & { webkitAudioContext?: unknown }));
 
   const requestWakeLock = useCallback(async () => {
     if (!wakeLockSupported || wakeLockRef.current) return;
@@ -231,7 +235,11 @@ export function SoccerPracticeWidget() {
       if (!soundSupported) return false;
       try {
         if (!audioContextRef.current) {
-          audioContextRef.current = new window.AudioContext();
+          const AudioContextCtor =
+            window.AudioContext ||
+            (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+          if (!AudioContextCtor) return false;
+          audioContextRef.current = new AudioContextCtor();
         }
 
         const audioCtx = audioContextRef.current;
@@ -244,9 +252,11 @@ export function SoccerPracticeWidget() {
         }
 
         setSoundReady(true);
+        setSupportMessage("Sound enabled. You should now hear timer whistles.");
         return true;
       } catch {
         setSoundReady(false);
+        setSupportMessage("Sound is blocked. Check silent mode and tap Enable Sound again.");
         return false;
       }
     },
@@ -258,6 +268,15 @@ export function SoccerPracticeWidget() {
     if (!isReady || !audioContextRef.current) return;
     scheduleWhistleTone(audioContextRef.current);
   }, [ensureAudioReady]);
+
+  function toggleKeepScreenAwake() {
+    if (!wakeLockSupported) {
+      setSupportMessage("Keep Screen Awake is not supported by this iPhone browser.");
+      return;
+    }
+    setSupportMessage("");
+    setKeepScreenAwake((current) => !current);
+  }
 
   const reconcileActiveTimer = useCallback(
     (shouldPlaySound: boolean) => {
@@ -508,17 +527,21 @@ export function SoccerPracticeWidget() {
           </button>
           <button
             type="button"
-            onClick={() => setKeepScreenAwake((current) => !current)}
-            disabled={!wakeLockSupported}
-            className="min-h-11 rounded-lg border border-slate-600 bg-slate-800 px-3 text-sm font-semibold text-slate-100 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={toggleKeepScreenAwake}
+            className="min-h-11 rounded-lg border border-slate-600 bg-slate-800 px-3 text-sm font-semibold text-slate-100 hover:bg-slate-700"
           >
             {keepScreenAwake ? "Keep Screen Awake: On" : "Keep Screen Awake: Off"}
           </button>
           <button
             type="button"
-            onClick={() => void ensureAudioReady(true)}
-            disabled={!soundSupported}
-            className="min-h-11 rounded-lg border border-slate-600 bg-slate-800 px-3 text-sm font-semibold text-slate-100 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={() => {
+              if (!soundSupported) {
+                setSupportMessage("Audio is not supported in this browser.");
+                return;
+              }
+              void ensureAudioReady(true);
+            }}
+            className="min-h-11 rounded-lg border border-slate-600 bg-slate-800 px-3 text-sm font-semibold text-slate-100 hover:bg-slate-700"
           >
             {soundReady ? "Sound Enabled" : "Enable Sound"}
           </button>
@@ -526,6 +549,9 @@ export function SoccerPracticeWidget() {
         <p className="mt-2 text-[11px] text-slate-400">
           Tap Enable Sound once on mobile, then keep screen awake while timer runs for best reliability.
         </p>
+        {supportMessage ? (
+          <p className="mt-1 text-[11px] font-semibold text-amber-300">{supportMessage}</p>
+        ) : null}
       </div>
 
       <div className="mt-3 space-y-3">

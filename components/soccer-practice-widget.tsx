@@ -155,9 +155,7 @@ function toTimerState() {
   return state;
 }
 
-function playWhistleTone() {
-  if (typeof window === "undefined") return;
-  const audioCtx = new window.AudioContext();
+function scheduleWhistleTone(audioCtx: AudioContext, gainScale = 1) {
   const now = audioCtx.currentTime;
 
   const gain = audioCtx.createGain();
@@ -178,18 +176,14 @@ function playWhistleTone() {
   oscillatorA.connect(gain);
   oscillatorB.connect(gain);
 
-  gain.gain.exponentialRampToValueAtTime(0.22, now + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.14, now + 0.2);
+  gain.gain.exponentialRampToValueAtTime(0.22 * gainScale, now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.14 * gainScale, now + 0.2);
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
 
   oscillatorA.start(now);
   oscillatorB.start(now);
   oscillatorA.stop(now + 0.58);
   oscillatorB.stop(now + 0.58);
-
-  window.setTimeout(() => {
-    audioCtx.close().catch(() => undefined);
-  }, 800);
 }
 
 export function SoccerPracticeWidget() {
@@ -199,8 +193,10 @@ export function SoccerPracticeWidget() {
   const [activeTimerBlockId, setActiveTimerBlockId] = useState<string | null>(null);
   const [activeTimerEndAtMs, setActiveTimerEndAtMs] = useState<number | null>(null);
   const [keepScreenAwake, setKeepScreenAwake] = useState(false);
+  const [soundReady, setSoundReady] = useState(false);
   const timerRef = useRef<number | null>(null);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   const completedCount = useMemo(
     () => Object.values(completed).filter(Boolean).length,
@@ -208,6 +204,7 @@ export function SoccerPracticeWidget() {
   );
   const progressPercent = (completedCount / SESSION_BLOCKS.length) * 100;
   const wakeLockSupported = typeof navigator !== "undefined" && "wakeLock" in navigator;
+  const soundSupported = typeof window !== "undefined" && "AudioContext" in window;
 
   const requestWakeLock = useCallback(async () => {
     if (!wakeLockSupported || wakeLockRef.current) return;
@@ -229,6 +226,39 @@ export function SoccerPracticeWidget() {
     }
   }, []);
 
+  const ensureAudioReady = useCallback(
+    async (playTestTone: boolean) => {
+      if (!soundSupported) return false;
+      try {
+        if (!audioContextRef.current) {
+          audioContextRef.current = new window.AudioContext();
+        }
+
+        const audioCtx = audioContextRef.current;
+        if (audioCtx.state === "suspended") {
+          await audioCtx.resume();
+        }
+
+        if (playTestTone) {
+          scheduleWhistleTone(audioCtx, 0.5);
+        }
+
+        setSoundReady(true);
+        return true;
+      } catch {
+        setSoundReady(false);
+        return false;
+      }
+    },
+    [soundSupported],
+  );
+
+  const playWhistleTone = useCallback(async () => {
+    const isReady = await ensureAudioReady(false);
+    if (!isReady || !audioContextRef.current) return;
+    scheduleWhistleTone(audioContextRef.current);
+  }, [ensureAudioReady]);
+
   const reconcileActiveTimer = useCallback(
     (shouldPlaySound: boolean) => {
       if (!activeTimerBlockId || !activeTimerEndAtMs) return;
@@ -239,7 +269,7 @@ export function SoccerPracticeWidget() {
         setCompleted((existing) => ({ ...existing, [activeTimerBlockId]: true }));
         setActiveTimerBlockId(null);
         setActiveTimerEndAtMs(null);
-        if (shouldPlaySound) playWhistleTone();
+        if (shouldPlaySound) void playWhistleTone();
         return;
       }
 
@@ -248,7 +278,7 @@ export function SoccerPracticeWidget() {
         return { ...current, [activeTimerBlockId]: remaining };
       });
     },
-    [activeTimerBlockId, activeTimerEndAtMs],
+    [activeTimerBlockId, activeTimerEndAtMs, playWhistleTone],
   );
 
   useEffect(() => {
@@ -371,6 +401,9 @@ export function SoccerPracticeWidget() {
   useEffect(() => {
     return () => {
       void releaseWakeLock();
+      if (audioContextRef.current) {
+        void audioContextRef.current.close();
+      }
     };
   }, [releaseWakeLock]);
 
@@ -387,6 +420,7 @@ export function SoccerPracticeWidget() {
   }
 
   function startOrPauseTimer(id: string) {
+    void ensureAudioReady(false);
     setOpenBlockId(id);
 
     if (activeTimerBlockId === id) {
@@ -464,7 +498,7 @@ export function SoccerPracticeWidget() {
       </div>
 
       <div className="sticky top-2 z-20 mt-3 rounded-xl border border-slate-700 bg-slate-900/90 p-2 shadow-md backdrop-blur">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <button
             type="button"
             onClick={resetAll}
@@ -480,9 +514,17 @@ export function SoccerPracticeWidget() {
           >
             {keepScreenAwake ? "Keep Screen Awake: On" : "Keep Screen Awake: Off"}
           </button>
+          <button
+            type="button"
+            onClick={() => void ensureAudioReady(true)}
+            disabled={!soundSupported}
+            className="min-h-11 rounded-lg border border-slate-600 bg-slate-800 px-3 text-sm font-semibold text-slate-100 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {soundReady ? "Sound Enabled" : "Enable Sound"}
+          </button>
         </div>
         <p className="mt-2 text-[11px] text-slate-400">
-          Best reliability: keep screen awake while timer runs. Most phones pause web timers when locked.
+          Tap Enable Sound once on mobile, then keep screen awake while timer runs for best reliability.
         </p>
       </div>
 

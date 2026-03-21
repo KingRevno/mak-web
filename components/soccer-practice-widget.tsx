@@ -1,411 +1,414 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-type ScriptLine = {
-  speaker: "Coach" | "Tip" | "Players";
-  text: string;
-};
+type BlockType = "activity" | "water";
 
-type SegmentType =
-  | "warmup"
-  | "drill"
-  | "game"
-  | "drill2"
-  | "game2"
-  | "scrimmage"
-  | "freeplay";
-
-type PracticeSegment = {
+type SessionBlock = {
   id: string;
   icon: string;
-  type: SegmentType;
+  type: BlockType;
   title: string;
-  time: string;
   durationMinutes: number;
   objective: string;
   setup: string;
-  coachingFocus: string;
-  sayThis: string;
-  tags: string[];
-  script: ScriptLine[];
+  coachingTip: string;
+  scriptLine: string;
 };
 
-const SEGMENT_STYLES: Record<
-  SegmentType,
-  { container: string; chip: string; text: string; progress: string }
-> = {
-  warmup: {
-    container: "border-yellow-300/50 bg-yellow-50",
-    chip: "bg-yellow-100 text-yellow-800",
-    text: "text-yellow-900",
-    progress: "bg-yellow-500",
-  },
-  drill: {
-    container: "border-blue-300/40 bg-blue-50",
-    chip: "bg-blue-100 text-blue-800",
-    text: "text-blue-900",
-    progress: "bg-blue-600",
-  },
-  game: {
-    container: "border-emerald-300/40 bg-emerald-50",
-    chip: "bg-emerald-100 text-emerald-800",
-    text: "text-emerald-900",
-    progress: "bg-emerald-600",
-  },
-  drill2: {
-    container: "border-orange-300/40 bg-orange-50",
-    chip: "bg-orange-100 text-orange-800",
-    text: "text-orange-900",
-    progress: "bg-orange-500",
-  },
-  game2: {
-    container: "border-teal-300/40 bg-teal-50",
-    chip: "bg-teal-100 text-teal-800",
-    text: "text-teal-900",
-    progress: "bg-teal-600",
-  },
-  scrimmage: {
-    container: "border-violet-300/40 bg-violet-50",
-    chip: "bg-violet-100 text-violet-800",
-    text: "text-violet-900",
-    progress: "bg-violet-600",
-  },
-  freeplay: {
-    container: "border-rose-300/40 bg-rose-50",
-    chip: "bg-rose-100 text-rose-800",
-    text: "text-rose-900",
-    progress: "bg-rose-600",
-  },
-};
-
-const SPEAKER_STYLES: Record<ScriptLine["speaker"], string> = {
-  Coach: "bg-emerald-100 text-emerald-800",
-  Tip: "bg-amber-100 text-amber-800",
-  Players: "bg-blue-100 text-blue-800",
-};
-
-const PRACTICE_SEGMENTS: PracticeSegment[] = [
+const SESSION_BLOCKS: SessionBlock[] = [
   {
-    id: "dynamic-warmup",
+    id: "freeze-tag",
     icon: "🏃",
-    type: "warmup",
-    title: "Dynamic Warmup + Ball Touches",
-    time: "0:00 - 0:08",
+    type: "activity",
+    title: 'Warm-Up — "Freeze Tag with the Ball"',
     durationMinutes: 8,
-    objective: "Raise heart rate, improve mobility, and get everyone active with the ball.",
-    setup: "Each player with a ball in a 20x20 yard grid. Cones on corners.",
-    coachingFocus: "Light feet, heads up, and quality first touch.",
-    sayThis: "Fast feet, big smile, and touch the ball every 2 seconds.",
-    tags: ["Warmup", "Ball Mastery", "Movement"],
-    script: [
-      { speaker: "Coach", text: "Quick feet in place, now dribble anywhere in the grid." },
-      { speaker: "Tip", text: "Keep your knees bent and push the ball, don't kick it far." },
-      { speaker: "Players", text: "Can we use both feet? Yes. Challenge mode starts now." },
-    ],
+    objective: "Get every player comfortable touching the ball in a fun and low-pressure start.",
+    setup: "Every player has a ball and dribbles around in a marked grid.",
+    coachingTip: 'When you call "freeze," remind them to stop the ball with the sole of the foot.',
+    scriptLine: "Big smiles, little touches, and stop it strong when I say freeze.",
   },
   {
-    id: "gates-dribbling",
-    icon: "🚩",
-    type: "drill",
-    title: "Gates Dribbling Challenge",
-    time: "0:08 - 0:18",
+    id: "water-1",
+    icon: "💧",
+    type: "water",
+    title: "Water Break",
+    durationMinutes: 3,
+    objective: "Hydrate and reset attention before the next game.",
+    setup: "Bring team to sideline, quick sip, and gather back in the grid.",
+    coachingTip: "Keep this break short and upbeat so focus stays high.",
+    scriptLine: "Quick water, then right back for our next challenge.",
+  },
+  {
+    id: "red-light-green-light",
+    icon: "🚦",
+    type: "activity",
+    title: 'Drill — "Red Light, Green Light Dribbling"',
     durationMinutes: 10,
-    objective: "Improve control while dribbling and scanning for space.",
-    setup: "Place 8-10 cone gates. Players score by dribbling through as many gates as possible.",
-    coachingFocus: "Scan early, change pace after each gate, and use both feet.",
-    sayThis: "Eyes up before every gate. Burst out fast after your touch.",
-    tags: ["Dribbling", "Scanning", "Agility"],
-    script: [
-      { speaker: "Coach", text: "Score points by dribbling through a gate and turning away quickly." },
-      { speaker: "Tip", text: "Try inside-outside touches to turn faster." },
-      { speaker: "Players", text: "I'm at 6 gates. Going for 8 this round." },
-    ],
+    objective: "Build basic control and listening skills while dribbling toward coach.",
+    setup: "Players start on one line with a ball each and move toward coach on calls.",
+    coachingTip:
+      "Green = go, Red = stop ball with foot, Yellow = slow dribble. Praise quick reactions.",
+    scriptLine: "Green means go, yellow means tiny touches, and red means foot on top of the ball.",
   },
   {
-    id: "passing-triangles",
-    icon: "🔺",
-    type: "game",
-    title: "Passing Triangles",
-    time: "0:18 - 0:30",
-    durationMinutes: 12,
-    objective: "Build passing rhythm and movement after the pass.",
-    setup: "Groups of 3 in triangles, one ball per group.",
-    coachingFocus: "First touch to prepare the pass and move to support immediately.",
-    sayThis: "Pass, move, show, repeat. Keep the triangle alive.",
-    tags: ["Passing", "Support", "Teamwork"],
-    script: [
-      { speaker: "Coach", text: "Pass and follow your pass. Keep your shape." },
-      { speaker: "Tip", text: "Open your body so your next pass is easy." },
-      { speaker: "Players", text: "One touch if we can, two touch if we need." },
-    ],
+    id: "water-2",
+    icon: "💧",
+    type: "water",
+    title: "Water Break",
+    durationMinutes: 3,
+    objective: "Hydrate and lower energy spikes before the next game.",
+    setup: "Circle up by cones and count down together to restart quickly.",
+    coachingTip: "Give one positive shoutout while players drink.",
+    scriptLine: "Sip and breathe, then we play sharks and minnows.",
   },
   {
-    id: "1v1-to-goals",
-    icon: "⚡",
-    type: "drill2",
-    title: "1v1 to Mini Goals",
-    time: "0:30 - 0:42",
-    durationMinutes: 12,
-    objective: "Develop attacking confidence and defending technique.",
-    setup: "Two mini goals, rotate pairs quickly. Start from coach pass-in.",
-    coachingFocus: "Attack with speed, defend side-on, recover quickly after transition.",
-    sayThis: "Explode into space. Defenders, delay first and win second touch.",
-    tags: ["1v1", "Transition", "Finishing"],
-    script: [
-      { speaker: "Coach", text: "Winner stays in. Play at game speed." },
-      { speaker: "Tip", text: "One fake, one burst. Keep it simple." },
-      { speaker: "Players", text: "Defender pressure! I'm turning out." },
-    ],
+    id: "sharks-minnows",
+    icon: "🦈",
+    type: "activity",
+    title: 'Fun Game — "Sharks and Minnows"',
+    durationMinutes: 10,
+    objective: "Encourage shielding, changing direction, and decision making under pressure.",
+    setup: "2-3 sharks without balls. Minnows dribble in the grid and avoid losing possession.",
+    coachingTip: "Rotate sharks each round so everyone gets turns and stays engaged.",
+    scriptLine: "Minnows protect your ball, sharks chase with control and quick feet.",
   },
   {
-    id: "small-sided",
-    icon: "🎯",
-    type: "game2",
-    title: "4v4 Small-Sided Game",
-    time: "0:42 - 0:56",
-    durationMinutes: 14,
-    objective: "Apply dribbling, passing, and transition habits in game moments.",
-    setup: "Two teams, small field, no goalkeepers. Quick restarts.",
-    coachingFocus: "Create width, communicate, and transition quickly after loss.",
-    sayThis: "Win the ball in 3 seconds, then play forward.",
-    tags: ["Small-Sided", "Decision Making", "Compete"],
-    script: [
-      { speaker: "Coach", text: "Play fast. Restarts in 3 seconds." },
-      { speaker: "Tip", text: "Use the wide player to reset if crowded." },
-      { speaker: "Players", text: "Switch! Time! Player on your back!" },
-    ],
+    id: "water-3",
+    icon: "💧",
+    type: "water",
+    title: "Water Break",
+    durationMinutes: 3,
+    objective: "Hydrate and transition to a focused directional drill.",
+    setup: "Use this break to set cone gates while players drink.",
+    coachingTip: "Set expectations for light kicks and eyes up before restarting.",
+    scriptLine: "One more drink, then we shoot through the gates.",
   },
   {
-    id: "scrimmage",
-    icon: "🧠",
-    type: "scrimmage",
-    title: "Conditioned Scrimmage",
-    time: "0:56 - 1:08",
-    durationMinutes: 12,
-    objective: "Transfer core principles into realistic game flow.",
-    setup: "Normal scrimmage with one focus rule per round.",
-    coachingFocus: "First pass forward when possible, compact shape when defending.",
-    sayThis: "Play brave, stay connected, and talk every minute.",
-    tags: ["Scrimmage", "Tactics", "Communication"],
-    script: [
-      { speaker: "Coach", text: "Round 1 rule: goal counts double after 3 passes." },
-      { speaker: "Tip", text: "Check your shoulder before receiving." },
-      { speaker: "Players", text: "Set! Turn! Through ball on!" },
-    ],
+    id: "kick-in-gate",
+    icon: "🚩",
+    type: "activity",
+    title: 'Drill — "Kick It In the Gate"',
+    durationMinutes: 8,
+    objective: "Practice dribbling with direction and simple controlled shooting.",
+    setup: "Place 4-5 cone gates around a small grid. Players dribble and kick through gates.",
+    coachingTip: "Encourage gentle passes through the gate, then recover and dribble again.",
+    scriptLine: "Eyes up, pick a gate, and pass it through with control.",
   },
   {
-    id: "cooldown",
+    id: "water-4",
+    icon: "💧",
+    type: "water",
+    title: "Water Break",
+    durationMinutes: 3,
+    objective: "Hydrate before free-play scrimmage.",
+    setup: "Gather near mini goals so restart is immediate.",
+    coachingTip: "Set one simple reminder: spread out and have fun.",
+    scriptLine: "Quick water and then it is game time.",
+  },
+  {
+    id: "mini-game",
+    icon: "⚽",
+    type: "activity",
+    title: 'Scrimmage — "Mini Game Free Play"',
+    durationMinutes: 8,
+    objective: "Let players play freely and build confidence in a game-like setting.",
+    setup: "Split into two small teams on a short field with small goals.",
+    coachingTip: "No rules coaching. Keep feedback positive and cheer every effort.",
+    scriptLine: "Play, smile, and try your best. Coach is cheering for everyone.",
+  },
+  {
+    id: "cool-down",
     icon: "👏",
-    type: "freeplay",
-    title: "Cool Down + Team Huddle",
-    time: "1:08 - 1:15",
-    durationMinutes: 7,
-    objective: "Recover, reflect, and lock in one focus for next session.",
-    setup: "Light jogging, stretch circle, quick debrief.",
-    coachingFocus: "Breathing down, hydration, and positive finish.",
-    sayThis: "What is one thing you did better today than last practice?",
-    tags: ["Recovery", "Reflection", "Culture"],
-    script: [
-      { speaker: "Coach", text: "One win, one challenge, one goal for next practice." },
-      { speaker: "Tip", text: "Keep feedback short and specific." },
-      { speaker: "Players", text: "I scanned more before receiving today." },
-    ],
+    type: "activity",
+    title: "Cool Down + Huddle",
+    durationMinutes: 4,
+    objective: "Help players calm down and reflect on their first practice.",
+    setup: "Sit in a circle, take deep breaths, then each kid shares one word.",
+    coachingTip: "Model a word first so shy players can follow.",
+    scriptLine: "One deep breath, one proud word, and great job today team.",
   },
 ];
 
-function formatPercent(value: number) {
-  return `${Math.round(value)}%`;
+const TOTAL_SESSION_MINUTES = SESSION_BLOCKS.reduce(
+  (total, block) => total + block.durationMinutes,
+  0,
+);
+
+function formatClock(seconds: number) {
+  const safeSeconds = Math.max(0, seconds);
+  const mins = Math.floor(safeSeconds / 60);
+  const secs = safeSeconds % 60;
+  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+}
+
+function toTimerState() {
+  const state: Record<string, number> = {};
+  for (const block of SESSION_BLOCKS) {
+    state[block.id] = block.durationMinutes * 60;
+  }
+  return state;
+}
+
+function playWhistleTone() {
+  if (typeof window === "undefined") return;
+  const audioCtx = new window.AudioContext();
+  const now = audioCtx.currentTime;
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.connect(audioCtx.destination);
+
+  const oscillatorA = audioCtx.createOscillator();
+  oscillatorA.type = "sawtooth";
+  oscillatorA.frequency.setValueAtTime(1500, now);
+  oscillatorA.frequency.exponentialRampToValueAtTime(2200, now + 0.22);
+  oscillatorA.frequency.exponentialRampToValueAtTime(1300, now + 0.45);
+
+  const oscillatorB = audioCtx.createOscillator();
+  oscillatorB.type = "square";
+  oscillatorB.frequency.setValueAtTime(1200, now);
+  oscillatorB.frequency.exponentialRampToValueAtTime(1700, now + 0.3);
+
+  oscillatorA.connect(gain);
+  oscillatorB.connect(gain);
+
+  gain.gain.exponentialRampToValueAtTime(0.22, now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.14, now + 0.2);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+
+  oscillatorA.start(now);
+  oscillatorB.start(now);
+  oscillatorA.stop(now + 0.58);
+  oscillatorB.stop(now + 0.58);
+
+  window.setTimeout(() => {
+    audioCtx.close().catch(() => undefined);
+  }, 800);
 }
 
 export function SoccerPracticeWidget() {
-  const [openSegmentId, setOpenSegmentId] = useState<string>(PRACTICE_SEGMENTS[0].id);
+  const [openBlockId, setOpenBlockId] = useState<string>(SESSION_BLOCKS[0].id);
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
+  const [timers, setTimers] = useState<Record<string, number>>(toTimerState);
+  const [activeTimerBlockId, setActiveTimerBlockId] = useState<string | null>(null);
+  const timerRef = useRef<number | null>(null);
 
   const completedCount = useMemo(
     () => Object.values(completed).filter(Boolean).length,
     [completed],
   );
-  const progress = (completedCount / PRACTICE_SEGMENTS.length) * 100;
+  const progressPercent = (completedCount / SESSION_BLOCKS.length) * 100;
+
+  useEffect(() => {
+    if (!activeTimerBlockId) {
+      if (timerRef.current) {
+        window.clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
+    }
+
+    timerRef.current = window.setInterval(() => {
+      setTimers((current) => {
+        const remaining = current[activeTimerBlockId];
+        if (remaining <= 1) {
+          window.clearInterval(timerRef.current ?? undefined);
+          timerRef.current = null;
+          setActiveTimerBlockId(null);
+          setCompleted((existing) => ({ ...existing, [activeTimerBlockId]: true }));
+          playWhistleTone();
+          return { ...current, [activeTimerBlockId]: 0 };
+        }
+
+        return { ...current, [activeTimerBlockId]: remaining - 1 };
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) {
+        window.clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [activeTimerBlockId]);
 
   function toggleComplete(id: string) {
-    setCompleted((current) => ({
-      ...current,
-      [id]: !current[id],
-    }));
+    setCompleted((current) => ({ ...current, [id]: !current[id] }));
   }
 
-  function markAllDone() {
-    const next: Record<string, boolean> = {};
-    for (const segment of PRACTICE_SEGMENTS) next[segment.id] = true;
-    setCompleted(next);
+  function resetBlockTimer(id: string, durationMinutes: number) {
+    setTimers((current) => ({ ...current, [id]: durationMinutes * 60 }));
+    if (activeTimerBlockId === id) setActiveTimerBlockId(null);
   }
 
-  function resetSession() {
+  function startOrPauseTimer(id: string) {
+    setOpenBlockId(id);
+    setActiveTimerBlockId((current) => (current === id ? null : id));
+  }
+
+  function resetAll() {
     setCompleted({});
-    setOpenSegmentId(PRACTICE_SEGMENTS[0].id);
+    setTimers(toTimerState());
+    setActiveTimerBlockId(null);
+    setOpenBlockId(SESSION_BLOCKS[0].id);
   }
 
   return (
-    <section className="mx-auto w-full max-w-3xl px-3 pb-10 pt-4 sm:px-4">
-      <div className="overflow-hidden rounded-2xl border border-emerald-800/20 bg-emerald-700 shadow-lg">
+    <section className="mx-auto w-full max-w-3xl px-3 pb-8 pt-4 sm:px-4">
+      <div className="overflow-hidden rounded-2xl border border-emerald-600/30 bg-gradient-to-br from-emerald-900 via-emerald-800 to-slate-900 shadow-xl">
         <div className="relative px-4 py-4 sm:px-6">
-          <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.04)_0px,rgba(255,255,255,0.04)_42px,transparent_42px,transparent_84px)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.04)_0px,rgba(255,255,255,0.04)_36px,transparent_36px,transparent_72px)]" />
           <div className="relative flex items-center gap-3">
             <span className="text-3xl" aria-hidden>
               ⚽
             </span>
             <div className="min-w-0">
-              <h1 className="truncate text-xl font-extrabold tracking-tight text-white sm:text-2xl">
-                Practice Plan
+              <h1 className="truncate text-xl font-extrabold text-white sm:text-2xl">
+                6U First Practice Tracker
               </h1>
               <p className="text-xs font-semibold text-emerald-100 sm:text-sm">
-                Mobile quick-view for tomorrow&apos;s session
+                Field-ready mobile view for tomorrow
               </p>
             </div>
-            <span className="ml-auto rounded-full bg-white/20 px-2 py-1 text-[11px] font-bold text-white">
-              75 min
+            <span className="ml-auto rounded-full bg-white/15 px-2.5 py-1 text-xs font-bold text-white">
+              {TOTAL_SESSION_MINUTES} min
             </span>
           </div>
         </div>
 
-        <div className="border-t border-white/15 bg-white/95 px-4 py-3 sm:px-6">
-          <div className="mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-wide text-slate-500">
-            <span>Progress</span>
+        <div className="border-t border-white/10 bg-slate-950/60 px-4 py-3 sm:px-6">
+          <div className="mb-2 flex items-center justify-between text-xs font-bold text-slate-200">
+            <span>Session progress</span>
             <span>
-              {completedCount}/{PRACTICE_SEGMENTS.length} complete
+              {completedCount} of {SESSION_BLOCKS.length} complete
             </span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+          <div className="h-2 overflow-hidden rounded-full bg-slate-700">
             <div
-              className="h-2 rounded-full bg-emerald-600 transition-all duration-500"
-              style={{ width: formatPercent(progress) }}
+              className="h-full rounded-full bg-emerald-400 transition-all duration-300"
+              style={{ width: `${progressPercent}%` }}
             />
           </div>
         </div>
       </div>
 
-      <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
-        Keep this page open during practice. Tap each block to expand and mark complete.
-      </p>
-
-      <div className="sticky top-3 z-20 mt-3 flex gap-2 rounded-xl border border-slate-200 bg-white/95 p-2 shadow-sm backdrop-blur">
+      <div className="sticky top-2 z-20 mt-3 rounded-xl border border-slate-700 bg-slate-900/90 p-2 shadow-md backdrop-blur">
         <button
           type="button"
-          onClick={markAllDone}
-          className="min-h-10 flex-1 rounded-lg bg-emerald-600 px-3 text-sm font-semibold text-white hover:bg-emerald-700"
+          onClick={resetAll}
+          className="min-h-11 w-full rounded-lg border border-slate-600 bg-slate-800 px-3 text-sm font-semibold text-slate-100 hover:bg-slate-700"
         >
-          Mark all done
-        </button>
-        <button
-          type="button"
-          onClick={resetSession}
-          className="min-h-10 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 hover:bg-slate-100"
-        >
-          Reset
+          Reset Session
         </button>
       </div>
 
       <div className="mt-3 space-y-3">
-        {PRACTICE_SEGMENTS.map((segment, index) => {
-          const styles = SEGMENT_STYLES[segment.type];
-          const isOpen = openSegmentId === segment.id;
-          const isDone = Boolean(completed[segment.id]);
+        {SESSION_BLOCKS.map((block, index) => {
+          const isOpen = openBlockId === block.id;
+          const isActiveTimer = activeTimerBlockId === block.id;
+          const isDone = Boolean(completed[block.id]);
+          const isWater = block.type === "water";
 
           return (
             <article
-              key={segment.id}
-              className={`rounded-2xl border ${styles.container} shadow-sm transition hover:shadow-md`}
+              key={block.id}
+              className={`overflow-hidden rounded-2xl border ${
+                isWater
+                  ? "border-sky-400/40 bg-sky-900/40"
+                  : "border-slate-700 bg-slate-900"
+              } shadow-md`}
             >
               <button
                 type="button"
-                onClick={() => setOpenSegmentId(isOpen ? "" : segment.id)}
+                onClick={() => setOpenBlockId(isOpen ? "" : block.id)}
                 className="flex w-full items-center gap-3 px-3 py-3 text-left sm:px-4"
                 aria-expanded={isOpen}
-                aria-controls={`segment-${segment.id}`}
+                aria-controls={`block-${block.id}`}
               >
                 <span className="text-2xl" aria-hidden>
-                  {segment.icon}
+                  {block.icon}
                 </span>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                    {segment.time} - {segment.durationMinutes}m
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-slate-300">
+                    Block {index + 1} - {block.durationMinutes} min
                   </p>
-                  <p className={`truncate text-sm font-extrabold sm:text-base ${styles.text}`}>
-                    {segment.title}
+                  <p className="truncate text-sm font-extrabold text-white sm:text-base">
+                    {block.title}
                   </p>
                 </div>
                 <span
-                  className={`ml-auto rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${styles.chip}`}
+                  className={`ml-auto rounded-full px-2 py-1 text-xs font-bold ${
+                    isWater ? "bg-sky-300 text-sky-900" : "bg-emerald-300 text-emerald-900"
+                  }`}
                 >
-                  {index + 1}
+                  {formatClock(timers[block.id])}
                 </span>
               </button>
 
-              <div id={`segment-${segment.id}`} className={isOpen ? "block px-3 pb-3 sm:px-4" : "hidden"}>
-                <div className="mb-3 h-px bg-slate-300/60" />
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <div className="rounded-lg border border-black/5 bg-white/80 p-2.5">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+              <div id={`block-${block.id}`} className={isOpen ? "block px-3 pb-3 sm:px-4" : "hidden"}>
+                <div className="mb-3 h-px bg-slate-700" />
+                <div className="space-y-2">
+                  <div className="rounded-lg border border-slate-700 bg-slate-800/80 p-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
                       Objective
                     </p>
-                    <p className="mt-1 text-sm text-slate-800">{segment.objective}</p>
+                    <p className="mt-1 text-sm text-slate-100">{block.objective}</p>
                   </div>
-                  <div className="rounded-lg border border-black/5 bg-white/80 p-2.5">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Setup</p>
-                    <p className="mt-1 text-sm text-slate-800">{segment.setup}</p>
+                  <div className="rounded-lg border border-slate-700 bg-slate-800/80 p-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Setup</p>
+                    <p className="mt-1 text-sm text-slate-100">{block.setup}</p>
                   </div>
-                  <div className="rounded-lg border border-black/5 bg-white/80 p-2.5 sm:col-span-2">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
-                      Coaching focus
+                  <div className="rounded-lg border border-slate-700 bg-slate-800/80 p-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                      Coaching tip
                     </p>
-                    <p className="mt-1 text-sm text-slate-800">{segment.coachingFocus}</p>
+                    <p className="mt-1 text-sm text-slate-100">{block.coachingTip}</p>
+                  </div>
+                  <div
+                    className={`rounded-lg border p-2.5 ${
+                      isWater
+                        ? "border-sky-400/40 bg-sky-500/10"
+                        : "border-emerald-500/30 bg-emerald-500/10"
+                    }`}
+                  >
+                    <p className="text-sm font-bold italic text-slate-50">
+                      &ldquo;{block.scriptLine}&rdquo;
+                    </p>
                   </div>
                 </div>
 
-                <div className="mt-2 rounded-lg border border-black/5 bg-white/80 p-2.5">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Script</p>
-                  <div className="mt-2 space-y-2">
-                    {segment.script.map((line) => (
-                      <div key={`${segment.id}-${line.speaker}-${line.text}`} className="flex gap-2">
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${SPEAKER_STYLES[line.speaker]}`}
-                        >
-                          {line.speaker}
-                        </span>
-                        <p className="text-sm text-slate-700">{line.text}</p>
-                      </div>
-                    ))}
-                  </div>
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <button
+                    type="button"
+                    onClick={() => startOrPauseTimer(block.id)}
+                    className={`min-h-11 rounded-lg px-3 text-sm font-bold ${
+                      isActiveTimer
+                        ? "bg-amber-500 text-slate-950 hover:bg-amber-400"
+                        : "bg-emerald-500 text-slate-950 hover:bg-emerald-400"
+                    }`}
+                  >
+                    {isActiveTimer ? "Pause Timer" : "Start Timer"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => resetBlockTimer(block.id, block.durationMinutes)}
+                    className="min-h-11 rounded-lg border border-slate-600 bg-slate-800 px-3 text-sm font-semibold text-slate-100 hover:bg-slate-700"
+                  >
+                    Reset Timer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleComplete(block.id)}
+                    className={`min-h-11 rounded-lg px-3 text-sm font-bold ${
+                      isDone
+                        ? "bg-emerald-700 text-white hover:bg-emerald-600"
+                        : "border border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700"
+                    }`}
+                  >
+                    {isDone ? "Completed" : "Mark Complete"}
+                  </button>
                 </div>
-
-                <div className="mt-2 rounded-lg border border-black/5 bg-white/85 p-2.5">
-                  <p className="text-sm font-extrabold italic text-slate-800">
-                    &ldquo;{segment.sayThis}&rdquo;
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {segment.tags.map((tag) => (
-                      <span
-                        key={`${segment.id}-${tag}`}
-                        className="rounded-full bg-black/5 px-2 py-0.5 text-[11px] font-semibold text-slate-700"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => toggleComplete(segment.id)}
-                  className={`mt-2 min-h-10 rounded-full px-3 text-sm font-bold ${
-                    isDone
-                      ? `${styles.progress} text-white`
-                      : "border border-slate-300 bg-white text-slate-700"
-                  }`}
-                >
-                  {isDone ? "Completed" : "Mark complete"}
-                </button>
               </div>
             </article>
           );

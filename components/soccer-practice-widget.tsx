@@ -33,7 +33,7 @@ const SESSION_BLOCKS: SessionBlock[] = [
     icon: "💧",
     type: "water",
     title: "Water Break",
-    durationMinutes: 3,
+    durationMinutes: 1,
     objective: "Hydrate and reset attention before the next game.",
     setup: "Bring team to sideline, quick sip, and gather back in the grid.",
     coachingTip: "Keep this break short and upbeat so focus stays high.",
@@ -44,7 +44,7 @@ const SESSION_BLOCKS: SessionBlock[] = [
     icon: "🚦",
     type: "activity",
     title: 'Drill — "Red Light, Green Light Dribbling"',
-    durationMinutes: 10,
+    durationMinutes: 12,
     objective: "Build basic control and listening skills while dribbling toward coach.",
     setup: "Players start on one line with a ball each and move toward coach on calls.",
     coachingTip:
@@ -56,7 +56,7 @@ const SESSION_BLOCKS: SessionBlock[] = [
     icon: "💧",
     type: "water",
     title: "Water Break",
-    durationMinutes: 3,
+    durationMinutes: 1,
     objective: "Hydrate and lower energy spikes before the next game.",
     setup: "Circle up by cones and count down together to restart quickly.",
     coachingTip: "Give one positive shoutout while players drink.",
@@ -67,7 +67,7 @@ const SESSION_BLOCKS: SessionBlock[] = [
     icon: "🦈",
     type: "activity",
     title: 'Fun Game — "Sharks and Minnows"',
-    durationMinutes: 10,
+    durationMinutes: 12,
     objective: "Encourage shielding, changing direction, and decision making under pressure.",
     setup: "2-3 sharks without balls. Minnows dribble in the grid and avoid losing possession.",
     coachingTip: "Rotate sharks each round so everyone gets turns and stays engaged.",
@@ -78,7 +78,7 @@ const SESSION_BLOCKS: SessionBlock[] = [
     icon: "💧",
     type: "water",
     title: "Water Break",
-    durationMinutes: 3,
+    durationMinutes: 1,
     objective: "Hydrate and transition to a focused directional drill.",
     setup: "Use this break to set cone gates while players drink.",
     coachingTip: "Set expectations for light kicks and eyes up before restarting.",
@@ -89,7 +89,7 @@ const SESSION_BLOCKS: SessionBlock[] = [
     icon: "🚩",
     type: "activity",
     title: 'Drill — "Kick It In the Gate"',
-    durationMinutes: 8,
+    durationMinutes: 10,
     objective: "Practice dribbling with direction and simple controlled shooting.",
     setup: "Place 4-5 cone gates around a small grid. Players dribble and kick through gates.",
     coachingTip: "Encourage gentle passes through the gate, then recover and dribble again.",
@@ -100,7 +100,7 @@ const SESSION_BLOCKS: SessionBlock[] = [
     icon: "💧",
     type: "water",
     title: "Water Break",
-    durationMinutes: 3,
+    durationMinutes: 1,
     objective: "Hydrate before free-play scrimmage.",
     setup: "Gather near mini goals so restart is immediate.",
     coachingTip: "Set one simple reminder: spread out and have fun.",
@@ -111,7 +111,7 @@ const SESSION_BLOCKS: SessionBlock[] = [
     icon: "⚽",
     type: "activity",
     title: 'Scrimmage — "Mini Game Free Play"',
-    durationMinutes: 8,
+    durationMinutes: 10,
     objective: "Let players play freely and build confidence in a game-like setting.",
     setup: "Split into two small teams on a short field with small goals.",
     coachingTip: "No rules coaching. Keep feedback positive and cheer every effort.",
@@ -516,7 +516,7 @@ export function SoccerPracticeWidget() {
         </div>
       </div>
 
-      <div className="sticky top-2 z-20 mt-3 rounded-xl border border-slate-700 bg-slate-900/90 p-2 shadow-md backdrop-blur">
+      <div className="mt-3 rounded-xl border border-slate-700 bg-slate-900 p-2 shadow-md">
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <button
             type="button"
